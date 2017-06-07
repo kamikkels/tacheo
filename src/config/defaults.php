@@ -4,10 +4,10 @@ return array(
     'timezone'        => 'UTC',
     'zone_designator' => 'Z',
     'length'          => array(
-        'second' => '%s',
-        'minute' => '%i',
-        'hour'   => '%h',
-        'day'    => '%d',
-        'year'   => '%y',
+        'second' => 1,
+        'minute' => 60,
+        'hour'   => 3600,
+        'day'    => 86400,
+        'year'   => 31536000,
     ),
 );

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace dt4a_challenge;
 
+use \DateTime;
+use phpDocumentor\Reflection\Types\String_;
+
 /**
  * Class DateTimeUtils
  *
@@ -19,14 +22,47 @@ class DateTimeUtilities
      *
      * DateTime comparison function, returns the quantity of whole units between the two datetimes
      *
-     * @param \DateTime $startDateTime - DateTime object for comparison
-     * @param \DateTime $endDateTime   - Second DateTime objectfor comparison
-     * @param String $unit : 'day' - Units to define comparison output
-     * @return String - The quantitiy of whole units between the two DateTime objects
+     * @param \DateTime $start - DateTime object for comparison
+     * @param \DateTime $end   - Second DateTime objectfor comparison
+     * @param String $unit : 'day'     - Units to define comparison output
+     * @param bool $ret_int            - Flag to return the integer difference only
+     * @return String                  - The quantitiy of whole units between the two DateTime objects
      */
-    function timeBetween(\DateTime $startDateTime, \DateTime $endDateTime, String $unit = 'day') : String {
+
+    public static function timeBetweenDateTimes(\DateTime $start, \DateTime $end, String $unit = 'day', bool $ret_int = false)
+    {
+        return self::timeBetween($start->getTimestamp(), $end->getTimestamp(), $unit, $ret_int);
+    }
+
+    /**
+     * timeBetweenStrings
+     *
+     * DateTime comparison function, returns the quantity of whole units between the two strings passed in
+     *
+     * @param String $start - Start datetime for comparison
+     * @param String $end   - End datetime for comparison
+     * @param String $unit  - Units to define comparison output
+     * @param bool $ret_int - Flag to return the integer difference only
+     * @return String       - The quantitiy of whole units between the two datetimes objects
+     */
+    public static function timeBetweenStrings(String $start, String $end, String $unit = 'day', bool $ret_int = false)
+    {
+        return self::timeBetween(strtotime($start), strtotime($end), $unit, $ret_int);
+    }
+
+    /**
+     *
+     *
+     * @param int $start    - Start timestamp for comparison
+     * @param int $end      - End timestamp for comparison
+     * @param String $unit  - Units to define comparison output
+     * @param bool $ret_int - Flag to return the integer difference only
+     * @return String       - The quantitiy of whole units between the two timestamps
+     */
+    public static function timeBetween(int $start, int $end, String $unit = 'day', bool $ret_int = false)
+    {
         # Get the config'd defaults
-        $defaultConfig = $this->getDefaults();
+        $defaultConfig = self::getDefaults();
 
         # Make the $units arg lowercase and strip off any trailing s
         $unit = rtrim(strtolower($unit), 's');
@@ -36,28 +72,13 @@ class DateTimeUtilities
             throw new \InvalidArgumentException('Invalid unit value passed in, units must be in ' . $unitTypes);
         }
 
-        $interval = (int)$startDateTime->diff($endDateTime)->format($defaultConfig['length'][$unit]);
+        $secondsDifference = $end - $start;
+        $interval = floor($secondsDifference / $defaultConfig['length'][$unit]);
 
-        return $this->pluralise($interval, $unit);
-    }
-
-    /**
-     * timeBetweenStrings
-     *
-     * DateTime comparison function, returns the quantity of whole units between the two strings passed in
-     *
-     * @param String $start
-     * @param String $end
-     * @param String $unit
-     * @return String
-     */
-    function timeBetweenStrings(String $start, String $end, String $unit = 'day') : String {
-        $defaultConfig = $this->getDefaults();
-
-        $startDateTime = strtotime($start);
-        $endDateTime = strtotime($end);
-
-        return $this->timeBetween($startDateTime, $endDateTime, $unit);
+        if($ret_int){
+            return $interval;
+        }
+        return self::humanise((int)$interval, $unit);
     }
 
     /**
@@ -69,8 +90,9 @@ class DateTimeUtilities
      * @param String $unit  - units to postfix the quantity
      * @return string       - quantity postfixed by pluralised units if required e.g. 45 Days
      */
-    private function pluralise(Integer $quantity, String $unit){
-        return $quantity . ucfirst($unit) . (($quantity != 1 && $quantity != -1) ? 's' : '');
+    private static function humanise(int $quantity, String $unit): String
+    {
+        return number_format($quantity) . ' ' . ucfirst($unit) . (($quantity != 1 && $quantity != -1) ? 's' : '');
     }
 
     /**
@@ -80,7 +102,8 @@ class DateTimeUtilities
      *
      * @return mixed
      */
-    private function getDefaults(){
+    private static function getDefaults()
+    {
         return include('config/defaults.php');
     }
 
