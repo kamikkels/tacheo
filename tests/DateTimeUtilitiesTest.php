@@ -27,6 +27,7 @@ class DateTimeUtilitiesTest extends TestCase
                 'Second' => '864,000 Seconds',
                 'Minute' => '14,400 Minutes',
                 'Hour'   => '240 Hours',
+                'Week'   => '1 Week',
                 'Day'    => '10 Days',
                 'Year'   => '0 Years',
             ),
@@ -40,6 +41,7 @@ class DateTimeUtilitiesTest extends TestCase
                 'Minute' => '1,750,431 Minutes',
                 'Hour'   => '29,173 Hours',
                 'Day'    => '1,215 Days',
+                'Week'   => '173 Weeks',
                 'Year'   => '3 Years',
             ),
         ),
@@ -52,6 +54,7 @@ class DateTimeUtilitiesTest extends TestCase
                 'Minute' => '35,775,554 Minutes',
                 'Hour'   => '596,259 Hours',
                 'Day'    => '24,844 Days',
+                'Week'   => '3,549 Weeks',
                 'Year'   => '68 Years',
             ),
         ),
@@ -65,6 +68,7 @@ class DateTimeUtilitiesTest extends TestCase
                 'Minute' => '57,866,594 Minutes',
                 'Hour'   => '964,443 Hours',
                 'Day'    => '40,185 Days',
+                'Week'   => '5,740 Weeks',
                 'Year'   => '110 Years',
             ),
         ),
@@ -187,4 +191,8 @@ class DateTimeUtilitiesTest extends TestCase
             'test'
         );
     }
+
+    /**
+     * Test execution of wholeWeeksBetween with valid inputs
+     */
 }

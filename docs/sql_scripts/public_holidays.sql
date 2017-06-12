@@ -1,26 +1,59 @@
 -- ---
--- Table 'public_holidays'
--- A list of public holidays
+-- Table 'Holidays'
 -- ---
 
-DROP TABLE IF EXISTS public_holidays;
-		
-CREATE TABLE public_holidays (
+DROP TABLE IF EXISTS Holidays;
+
+CREATE TABLE Holidays (
   id INTEGER PRIMARY KEY NOT NULL,
-  name INTEGER, -- The name for the public holiday.
-  week INTEGER, -- Either the week in the month or year if no month value is present.
-  day_of_week INTEGER, -- Day of week, 0 and 7 are Sunday.
-  day_of_month INTEGER, -- Day of month, 1 indexed (1 - 31).
-  month INTEGER,  -- Month in year, 1 indexed (1 - 12).
-  year INTEGER, -- Year in standard notation, e.g. 1991.
-  locality VARCHAR, -- Locality that the holiday applies to, e.g. Victoria, Australia.
-  start_time TIME,  -- If part day holiday start time.
-  end_time TIME  -- If part day holiday end time.
+  Name VARCHAR,       -- The name for the public holiday.
+  Month_Day INTEGER,  -- The month and day of the public holiday. e.g. 1225 for Christmas Day
+  Year INTEGER,       -- The year if applicable (for use with holidays that differ per year)
+  Start_Time INTEGER, -- If part day holiday start time.
+  End_Time INTEGER    -- If part day holiday end time.
+);
+
+-- ---
+-- Table 'Locations'
+-- ---
+
+DROP TABLE IF EXISTS Locations;
+
+CREATE TABLE Locations (
+  id INTEGER PRIMARY KEY NOT NULL,
+  Name INTEGER NULL DEFAULT NULL   -- Locality name, e.g. Victoria, Australia.
+);
+
+-- ---
+-- Table 'Holiday_Locations'
+-- ---
+
+DROP TABLE IF EXISTS Holiday_Locations;
+
+CREATE TABLE Holiday_Locations (
+  id INTEGER PRIMARY KEY NOT NULL,
+  Holiday_id INTEGER,
+  Location_id INTEGER,
+  FOREIGN KEY(Holiday_id) REFERENCES Holidays(id),
+  FOREIGN KEY(Location_id) REFERENCES Locations(id)
 );
 
 -- ---
 -- Test Data
 -- ---
 
--- INSERT INTO public_holidays (name,day_of_month, month, locality) VALUES
--- ('Australia Day','26','1','Australia');
+-- INSERT INTO Holidays (id,Name,Day_Month,Year,Start_Time,End_Time) VALUES
+-- (1,'Australia Day',126, NULL, NULL, NULL),
+-- (2,'Labour Day', 313, 2017, NULL, NULL),
+-- (3,'Labour Day', 312, 2018, NULL, NULL),
+-- INSERT INTO Holiday_Locations (Holiday_id,Location_id) VALUES
+-- (1,1),
+-- (1,2),
+-- (1,3),
+-- (2,3),
+-- (2,3),
+-- (3,3);
+-- INSERT INTO Locations (id,Name) VALUES
+-- (1,'SA, Australia'),
+-- (2,'NSW, Australia'),
+-- (3,'VIC, Australia');

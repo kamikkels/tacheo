@@ -22,11 +22,11 @@ class DateTimeUtilities
      *
      * DateTime comparison function, returns the quantity of whole units between the two DateTime objects.
      *
-     * @param \DateTime $start - DateTime object for comparison
-     * @param \DateTime $end   - Second DateTime objectfor comparison
-     * @param String $unit : 'day'     - Units to define comparison output
-     * @param bool $ret_int            - Flag to return the integer difference only
-     * @return String|int              - The quantity of whole units between the two DateTime objects
+     * @param \DateTime $start      - DateTime object for comparison
+     * @param \DateTime $end        - Second DateTime objectfor comparison
+     * @param String $unit : 'day'  - Units to define comparison output
+     * @param bool $ret_int         - Flag to return the integer difference only
+     * @return String|int           - The quantity of whole units between the two DateTime objects
      */
 
     public static function timeBetweenDateTimes(\DateTime $start, \DateTime $end, String $unit = 'day', bool $ret_int = false)
@@ -86,27 +86,31 @@ class DateTimeUtilities
     /**
      * wholeWeeksBetween
      *
-     * Determine the volume of whole weeks starting and ending on the startDay.
+     * Determine the volume of whole weeks starting and ending on a particular day.
      *
-     * @param int $start       - The start day's numeric representation 1 -> monday to 7 -> sunday
-     * @param int $end         - The end day's numeric representation 1 -> monday to 7 -> sunday
-     * @param String $startDay - The numeric representation for the first day of the week 1 -> monday to 7 -> sunday
-     * @return String|int      - The quantity of days from the start day to the next occuring end day
+     * @param int $start             - Timestamp for the start date
+     * @param int $end               - Timestamp for the end date
+     * @param String $startDay : '1' - The numeric representation for the first day of the week; 1 -> monday to 7 -> sunday
+     * @return String|int            - The quantity of whole weeks from the start timestamp till the end timestamp
      */
     public static function wholeWeeksBetween(int $start, int $end, String $startDay = 'default', bool $ret_int = false)
     {
         # Get the config'd defaults
         $defaultConfig = self::getDefaults();
-        # Set the default startDay if needed
+        # Set the default startDay if needed, throw some exceptions if needed
         if($startDay === 'default'){
             $startDay = $defaultConfig['week_start_day'];
         } elseif (!is_int($startDay) || $startDay > 7 || $startDay < 1 ){
             throw new \InvalidArgumentException('Invalid startDay value passed in, startDay must be either default or 1 to 7');
+        } elseif ($start > 7 || $start < 1 ){
+            throw new \InvalidArgumentException('Invalid start value passed in, start must be between 1 and 7');
+        } elseif ($end > 7 || $end < 1 ){
+            throw new \InvalidArgumentException('Invalid end value passed in, end must be between 1 and 7');
         }
 
         $rawWeekDays = self::timeBetween($start, $end, 'day', true);
-        $partWeekdaysAtStart = self::weekdaysFrom($start, $startDay);
-        $partWeekdaysAtEnd   = self::weekdaysFrom($startDay, $end);
+        $partWeekdaysAtStart = self::weekdaysBetween($start, $startDay);
+        $partWeekdaysAtEnd   = self::weekdaysBetween($startDay, $end);
 
         $weekCount = ($rawWeekDays - ($partWeekdaysAtStart + $partWeekdaysAtEnd)) / $defaultConfig['days_in_week'];
 
@@ -119,12 +123,14 @@ class DateTimeUtilities
     /**
      * weekdaysFrom
      *
-     * Determine the number of weekdays between two numbers
-     * @param int $start
-     * @param int $end
-     * @return int
+     * Determine the number of weekdays between two numbers representing weekdays
+     * 1 -> monday to 7 -> sunday
+     *
+     * @param int $start - The start day's numeric representation; 1 -> monday to 7 -> sunday
+     * @param int $end   - The end day's numeric representation; 1 -> monday to 7 -> sunday
+     * @return int       - The quantity of days from the start day to the next ocuring end day
      */
-    public static function weekdaysFrom(int $start, int $end): int
+    public static function weekdaysBetween(int $start, int $end): int
     {
         # Get the config'd defaults
         $defaultConfig = self::getDefaults();
@@ -139,7 +145,32 @@ class DateTimeUtilities
     }
 
     /**
-     * pluralise
+     * workingDaysBetween
+     *
+     * Determine the number of working weekdays between two timestamps within a given area
+     *
+     *
+     * @param int $start
+     * @param int $end
+     * @return int
+     */
+    public static function workingDaysBetween(int $start, int $end, Array $location)
+    {
+        # Get the config'd defaults
+        $defaultConfig = self::getDefaults();
+
+        # If the end day is earlier in the week sequence advance it to the next week
+        if($end < $start) {
+            $end = $end + $defaultConfig['days_in_week'];
+        }
+
+        $interval = $end - $start;
+
+        return $interval;
+    }
+
+    /**
+     * humanise
      *
      * Return nicely formated quantity with postfixed units
      *
