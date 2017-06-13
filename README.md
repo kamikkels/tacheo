@@ -1,2 +1,2 @@
 # dt4a_challenge
-Datetime library with a REST interface because REST is nice 
+Datetime function library for an exercise
