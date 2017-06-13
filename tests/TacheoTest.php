@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace dt4a_challenge;
+namespace Tacheo;
 
 use PHPUnit\Framework\TestCase;
 
-use dt4a_challenge\Tacheo;
 
 /**
  * Class TacheoTest
@@ -18,12 +17,12 @@ class TacheoTest extends TestCase
     /**
      * @var array - testData: an array of data to run tests over
      */
-    private $testData = array(
-        array(
+    private $testData = [
+        [
             'start'    => '2013-12-2 12:11:10',
             'end'      => '2013-12-9 12:11:10',
             'days'     => 10,
-            'expected' => array(
+            'expected' => [
                 'Second' => '604,800 Seconds',
                 'Minute' => '10,080 Minutes',
                 'Hour'   => '168 Hours',
@@ -31,13 +30,13 @@ class TacheoTest extends TestCase
                 'Day'    => '7 Days',
                 'Year'   => '0 Years',
                 'Complete weeks' => '0 Weeks',
-            ),
-        ),
-        array(
+            ],
+            'working' => '4 Working Days',
+        ], [
             'start'    => '2013-12-2 12:11:10',
             'end'      => '2017-04-01 3:03:03',
             'days'     => 1215,
-            'expected' => array(
+            'expected' => [
                 'Second' => '105,025,913 Seconds',
                 'Minute' => '1,750,431 Minutes',
                 'Hour'   => '29,173 Hours',
@@ -45,13 +44,13 @@ class TacheoTest extends TestCase
                 'Week'   => '173 Weeks',
                 'Year'   => '3 Years',
                 'Complete weeks' => '173 Weeks',
-            ),
-        ),
-        array(
+            ],
+            'working' => '864 Working Days',
+        ], [
             'start'    => '1970-01-01 0:00:00',
             'end'      => '2038-01-08 03:14:08',
             'days'     => 24844,
-            'expected' => array(
+            'expected' => [
                 'Second' => '2,146,533,248 Seconds',
                 'Minute' => '35,775,554 Minutes',
                 'Hour'   => '596,259 Hours',
@@ -59,14 +58,14 @@ class TacheoTest extends TestCase
                 'Week'   => '3,549 Weeks',
                 'Year'   => '68 Years',
                 'Complete weeks' => '3,549 Weeks',
-            ),
-        ),
+            ],
+            'working' => '17,740 Working Days',
+        ], [
         # Note: this test will fail on 32-bit systems
-        array(
             'start'    => '1940-01-01 0:00:00',
             'end'      => '2050-01-08 03:14:08',
             'days'     => 40185,
-            'expected' => array(
+            'expected' => [
                 'Second' => '3,471,995,648 Seconds',
                 'Minute' => '57,866,594 Minutes',
                 'Hour'   => '964,443 Hours',
@@ -74,28 +73,29 @@ class TacheoTest extends TestCase
                 'Week'   => '5,740 Weeks',
                 'Year'   => '110 Years',
                 'Complete weeks' => '5,740 Weeks',
-            ),
-        ),
-    );
+            ],
+            'working' => '28,700 Working Days',
+        ],
+    ];
 
-    private $dateFormat = 'Y-m-d H:i';
+    private $locations = [
+        'SA, Australia',
+        'NSW, Australia',
+        'VIC, Australia',
+    ];
 
     /**
-     * Test execution of timeBetween with valid input
+     * Test execution of timeBetween with valid input.
      */
     public function testCorrectTimeBetween(): void
     {
         # New line to make sure everything is nicely spaced
-        print PHP_EOL;
-
         foreach ($this->testData as $testDatum) {
             foreach ($testDatum['expected'] as $unit => $expectedResult){
                 $start = date_create($testDatum['start']);
                 $end   = date_create($testDatum['end']);
 
                 $testTacheo = new Tacheo($start, $end);
-
-                print "$unit - $expectedResult" . PHP_EOL;
 
                 $this->assertEquals(
                     $expectedResult,
@@ -106,7 +106,26 @@ class TacheoTest extends TestCase
     }
 
     /**
-     * Test execution of TimeBetween with invalid inputs
+     * Test execution of timeBetween with valid input.
+     */
+    public function testCorrectworkingDaysBetween(): void
+    {
+        # New line to make sure everything is nicely spaced
+        foreach ($this->testData as $testDatum) {
+            $start = date_create($testDatum['start']);
+            $end   = date_create($testDatum['end']);
+
+            $testTacheo = new Tacheo($start, $end);
+
+            $this->assertEquals(
+                $testDatum['working'],
+                $testTacheo->workingDaysBetween( $this->locations )
+            );
+        }
+    }
+
+    /**
+     * Test execution of TimeBetween with invalid inputs.
      */
     public function testExceptions(): void
     {

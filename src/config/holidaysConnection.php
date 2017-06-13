@@ -2,6 +2,5 @@
 
 return [
     'driver'   => 'sqlite',
-    'database' => __DIR__ . '../data/holidays.db',
-    'prefix'   => '',
+    'database' => dirname(__DIR__, 1) . '/data/holidays.db',
 ];

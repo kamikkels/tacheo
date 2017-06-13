@@ -5,7 +5,10 @@
  * @Version 0.9
  */
 
-namespace dt4a_challenge;
+namespace Tacheo;
+
+define('INC_ROOT', dirname(__DIR__, 1));
+require INC_ROOT . '/vendor/autoload.php';
 
 use Illuminate\Database\Capsule\Manager as Capsule;
 
@@ -30,6 +33,16 @@ class Holidays
         $this->locations = $locations;
     }
 
+    /**
+     * getHolidaysBetweenDates
+     *
+     * Get all holiday days between two DateTime objects
+     *
+     * @param \DateTime $start  - The start DateTime
+     * @param \DateTime $end    - The end DateTime
+     * @param bool $inc_partday - whether to include part-day holidays
+     * @return array - An array of all holidays between the DateTimes, indexed on year-month-day
+     */
     public function getHolidaysBetweenDates(\DateTime $start, \DateTime $end, bool $inc_partday = false): array
     {
         # Check what time period we're looking at, we'll need to select things slightly differently
@@ -40,18 +53,13 @@ class Holidays
             # Get the holidays from the start date till the end of the first year (year specific + re-occurring)
             $holidays = $this->getHolidaysBetweenMonthDay(
                 (int)$start->format('md'),
-                $this->endOfYear,
+                self::$endOfYear,
                 (int)$start->format('Y'),
                 $inc_partday
             );
 
             # See if there are intermediate years and get holidays for each of them (year specific + re-occurring)
             if(((int)$start->format('Y') - (int)$end->format('Y')) > 1) {
-                $genericHolidays = $this->getHolidaysBetweenMonthDay(
-                    self::$startOfYear,
-                    self::$endOfYear,
-                    null,
-                    $inc_partday);
                 # Note: this isn't the most efficient loop, but the difference only really comes out if you're
                 # looking at over 1,000 years of holidays, and there's other places this could be improved first
                 foreach (range(((int)$start->format('Y') + 1), ((int)$end->format('Y') - 1)) as $year) {
@@ -60,14 +68,14 @@ class Holidays
                         self::$endOfYear,
                         $year,
                         $inc_partday);
-                    $holidays = array_merge($holidays, $holidaysForYear, $this->addYearToArrayKeys($genericHolidays, $year));
+                    $holidays = array_merge($holidays, $holidaysForYear);
                 }
             }
 
             # Get the holidays form the start of the year till the end date (year specific + re-occurring)
             $holidays = array_merge($holidays,
                 $this->getHolidaysBetweenMonthDay(
-                    $this->startOfYear,
+                    self::$startOfYear,
                     (int)$end->format('md'),
                     (int)$end->format('Y'),
                     $inc_partday
@@ -79,7 +87,6 @@ class Holidays
 
         } elseif ((int)$start->format('md') > (int)$end->format('md'))
         {
-
             # Get the holidays from the start date till the end of the first year (year specific + re-occurring)
             $holidays = $this->getHolidaysBetweenMonthDay(
                 (int)$start->format('md'),
@@ -97,30 +104,50 @@ class Holidays
                     $inc_partday
                 )
             );
-            # Sort everything and return it
-            sort($holidays);
-            return $holidays;
+        } else {
+            # Get the holidays from the start date till the end date (year specific + re-occurring)
+            $holidays =  $this->getHolidaysBetweenMonthDay(
+                (int)$start->format('md'),
+                (int)$end->format('md'),
+                (int)$end->format('Y'),
+                $inc_partday
+            );
         }
-
-        return $this->getHolidaysBetweenMonthDay(
-            (int)$start->format('md'),
-            (int)$end->format('md'),
-            (int)$end->format('Y'),
-            $inc_partday
-        );
+        # Sort everything and return it
+        sort($holidays);
+        return $holidays;
     }
 
     public function getHolidaysBetweenMonthDay(int $start, int $end, int $year = null, bool $inc_partday = false): array
     {
-        $holidays = Capsule::table('Holidays')
-            ->join('Holiday_Locations', 'Holidays.id', '=', 'Holiday_Locations.Holiday_id')
-            ->join('Locations', 'Locations.id', '=', 'Holiday_Locations.Location_id')
-            ->whereIn('Locations.Name', $this->locations)
-            ->whereBetween('Holidays.Month_Day', [$start, $end])
-            ->whereIn('Holidays.Year', [$year, null])
+        $holidays = Capsule::table('holidays')
+            ->join('holiday_locations', 'holidays.id', '=', 'holiday_locations.holiday_id')
+            ->join('locations', 'locations.id', '=', 'holiday_locations.location_id')
+            ->whereIn('locations.location_name', $this->locations)
+            ->whereBetween('holidays.month_day', [$start, $end])
+            ->whereRaw("holidays.year = $year or holidays.year IS NULL")
             ->get();
 
+        $holidaysAssoc = [];
+
         foreach($holidays as $holiday)
+        {
+            $index = ($holiday->year ? $holiday->year : $year )
+                        . str_pad($holiday->month_Day, 4, "0",  STR_PAD_LEFT);
+
+            if($holiday->holiday_name === 'Easter' && !is_null($year))
+            {
+                $index = $this->getWesternEasterSunday($year) + 1;
+                $holidaysAssoc[$index - 3] = $holiday;
+            }
+            elseif ($holiday->holiday_name === 'Eastern Easter' && !is_null($year))
+            {
+                $index = $this->getEasternEasterSunday($year) + 1;
+                $holidaysAssoc[$index - 3] = $holiday;
+            }
+
+            $holidaysAssoc[$index] = $holiday;
+        }
 
         return $holidaysAssoc;
     }
@@ -178,22 +205,6 @@ class Holidays
         $easterSunday = mktime(0, 0, 0, $month, $day, $year);
 
         return $easterSunday;
-    }
-
-    public function addYearToArrayKeys(array $array, int $year): array
-    {
-        # First get all the keys to remap
-        $keys = array_keys($array);
-
-        # Perform internal iteration with prefix passed into walk function for dynamic replace of key
-        array_walk($keys, 'addYearToKey', "$year");
-
-        # Combine the rewritten keys and overwrite the originals
-        return array_combine($keys, $array);
-    }
-
-    public function addYearToKey(&$value, $omit, $prefix){
-        $value = "$prefix$value";
     }
 
     /**

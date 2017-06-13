@@ -1,15 +1,13 @@
 <?php
 /**
- * Created by IntelliJ IDEA.
- * User: kerrymr
- * Date: 8/06/2017
- * Time: 4:41 PM
+ * Tacheo class - handles DateTime difference functions.
+ * User: Kerry M-R
+ * @Version 0.9
  */
 
-namespace dt4a_challenge;
+namespace Tacheo;
 
-use dt4a_challenge\Holidays;
-
+include 'Holidays.php';
 
 class Tacheo
 {
@@ -22,16 +20,36 @@ class Tacheo
 
     /**
      * Tacheo constructor.
-     *
-     * @param \DateTime $start
-     * @param \DateTime $end
+     * @param \DateTime $start      - The starting DateTime object
+     * @param \DateTime $end        - The ending DateTime object
+     * @param String|null $timezone - If the $start and $end objects are in different timezones a common timezone to convert them both to,
+     *                                  by default the timezone on the start object will be used
      */
-    public function __construct(\DateTime $start, \DateTime $end)
+    public function __construct(\DateTime $start, \DateTime $end, String $timezone = null)
     {
         $defaults = include('config/defaults.php');
 
         $this->start = $start;
-        $this->end = $end;
+        $this->end   = $end;
+
+        # If a timezone has been passed in move both DateTimes into that timezone, otherwise align end to start
+        # Note: this will not change the underlying timestamp, consider adding a destructive timeshift parameter.
+        if($timezone)
+        {
+            $tz = new \DateTimeZone($timezone);
+
+            if($this->start->getTimezone()->getName() !== $timezone)
+            {
+                $this->start->setTimezone($tz);
+            }
+            if($this->end->getTimezone()->getName() !== $timezone)
+            {
+                $this->end->setTimezone($tz);
+            }
+        } elseif($this->start->getTimezone()->getName() !== $this->end->getTimezone()->getName())
+        {
+            $this->end->setTimezone($this->start->getTimezone());
+        }
 
         $this->weekStartDay = $defaults['week_start_day'];
         $this->timeLengths  = $defaults['lengths'];
@@ -40,7 +58,6 @@ class Tacheo
 
         $this->timeLengths['week'] = $this->timeLengths['day'] * $this->daysInWeek;
     }
-
 
     /**
      * timeBetween
@@ -77,13 +94,33 @@ class Tacheo
         return $this->humanise($interval, $unit);
     }
 
-
+    /**
+     * workingDaysBetween
+     *
+     * Get the number of working days between the start and end dates
+     *
+     * @param array $locations
+     * @param bool $incPartDays
+     * @param bool $retInt
+     * @return mixed
+     */
     public function workingDaysBetween(array $locations, bool $incPartDays = false, bool $retInt = false)
     {
+        # Get holidays for the locations passed in, should extend this to allow 'xor' as well, rather than just 'or'.
         $holidayConnection = new Holidays($locations);
-        $holidays = $holidayConnection->getHolidaysBetween($this->start, $this->end, $incPartDays);
+        $holidays = $holidayConnection->getHolidaysBetweenDates($this->start, $this->end, $incPartDays);
 
+        $completeWeeks = $this->completeWeeksBetween('default', true);
 
+        $startDays = $this->workdaysBetween((int)$this->start->format('N'), max($this->workdays));
+        $endDays   = $this->workdaysBetween(min($this->workdays), (int)$this->end->format('N'));
+
+        $totalWorkingDays = $startDays + $endDays + ($completeWeeks * 5) - count($holidays);
+
+        if($retInt){
+            return $totalWorkingDays;
+        }
+        return $this->humanise($totalWorkingDays, 'Working Day');
     }
     
     /**
@@ -123,7 +160,7 @@ class Tacheo
     }
 
     /**
-     * weekdaysFrom
+     * weekdaysBetween
      *
      * Determine the number of weekdays between two numbers representing weekdays
      *
@@ -139,6 +176,34 @@ class Tacheo
         }
 
         $interval = $end - $start;
+
+        return $interval;
+    }
+
+    /**
+     * workdaysBetween
+     *
+     * Determine the number of workdays between two numbers representing weekdays
+     *
+     * @param int $start - The start day's numeric representation
+     * @param int $end   - The end day's numeric representation
+     * @return int       - The quantity of days from the start day to the next ocuring end day
+     */
+    public function workdaysBetween(int $start, int $end): int
+    {
+        # If the end day is earlier in the week sequence advance it to the next week
+        if($end < $start || $end > $this->daysInWeek) {
+            throw new \InvalidArgumentException("Invalid arguments passed in, start must be less than end, and end cannot be after the end of the week");
+        }
+
+        $interval = 0;
+        for($i = $start; $i <= $end; $i++)
+        {
+            if(in_array($i, $this->workdays))
+            {
+                $interval++;
+            }
+        }
 
         return $interval;
     }
