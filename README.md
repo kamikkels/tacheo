@@ -1,2 +1,4 @@
-# dt4a_challenge
-Datetime function library for an exercise
+# Tacheo
+A PHP datetime function library for an exercise
+
+needs some updaing
