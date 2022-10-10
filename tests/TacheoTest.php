@@ -6,7 +6,6 @@ namespace Tacheo;
 
 use PHPUnit\Framework\TestCase;
 
-
 /**
  * Class TacheoTest
  * @package dt4a_challenge
@@ -91,7 +90,7 @@ class TacheoTest extends TestCase
     {
         # New line to make sure everything is nicely spaced
         foreach ($this->testData as $testDatum) {
-            foreach ($testDatum['expected'] as $unit => $expectedResult){
+            foreach ($testDatum['expected'] as $unit => $expectedResult) {
                 $start = date_create($testDatum['start']);
                 $end   = date_create($testDatum['end']);
 

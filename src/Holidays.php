@@ -15,13 +15,13 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 class Holidays
 {
     private $holidaysCapsule;
-    private $locations;
+    private $locality;
     # December 31st (12/31)
     private static $endOfYear = 1231;
     # January 1st (01/01)
     private static $startOfYear = 101;
 
-    public function __construct(array $locations)
+    public function __construct(array $locality)
     {
         $connectionConfig = include('config/holidaysConnection.php');
 
@@ -30,7 +30,7 @@ class Holidays
         $this->holidaysCapsule->setAsGlobal();
         $this->holidaysCapsule->bootEloquent();
 
-        $this->locations = $locations;
+        $this->locality = $locality;
     }
 
     /**
@@ -48,8 +48,7 @@ class Holidays
         # Check what time period we're looking at, we'll need to select things slightly differently
         # depending on time spans due to re-occurring holidays
         $interval = $start->diff($end);
-        if($interval->y > 0 && !($interval->d == 0 && $interval->m == 0))
-        {
+        if($interval->y > 0 && !($interval->d == 0 && $interval->m == 0)) {
             # Get the holidays from the start date till the end of the first year (year specific + re-occurring)
             $holidays = $this->getHolidaysBetweenMonthDay(
                 (int)$start->format('md'),
@@ -72,7 +71,7 @@ class Holidays
                 }
             }
 
-            # Get the holidays form the start of the year till the end date (year specific + re-occurring)
+            # Get the holidays from the start of the year till the end date (year specific + re-occurring)
             $holidays = array_merge($holidays,
                 $this->getHolidaysBetweenMonthDay(
                     self::$startOfYear,
@@ -85,8 +84,7 @@ class Holidays
             sort($holidays);
             return $holidays;
 
-        } elseif ((int)$start->format('md') > (int)$end->format('md'))
-        {
+        } elseif ((int)$start->format('md') > (int)$end->format('md')) {
             # Get the holidays from the start date till the end of the first year (year specific + re-occurring)
             $holidays = $this->getHolidaysBetweenMonthDay(
                 (int)$start->format('md'),
@@ -121,9 +119,9 @@ class Holidays
     public function getHolidaysBetweenMonthDay(int $start, int $end, int $year = null, bool $inc_partday = false): array
     {
         $holidays = Capsule::table('holidays')
-            ->join('holiday_locations', 'holidays.id', '=', 'holiday_locations.holiday_id')
-            ->join('locations', 'locations.id', '=', 'holiday_locations.location_id')
-            ->whereIn('locations.location_name', $this->locations)
+            ->join('holiday_localities', 'holidays.id', '=', 'holiday_localities.holiday_id')
+            ->join('locality', 'locality.id', '=', 'holiday_localities.locality_id')
+            ->whereIn('locality.locality_name', $this->locality)
             ->whereBetween('holidays.month_day', [$start, $end])
             ->whereRaw("holidays.year = $year or holidays.year IS NULL")
             ->get();
@@ -135,13 +133,11 @@ class Holidays
             $index = ($holiday->year ? $holiday->year : $year )
                         . str_pad($holiday->month_Day, 4, "0",  STR_PAD_LEFT);
 
-            if($holiday->holiday_name === 'Easter' && !is_null($year))
-            {
+            if($holiday->holiday_name === 'Easter' && !is_null($year)) {
                 $index = $this->getWesternEasterSunday($year) + 1;
                 $holidaysAssoc[$index - 3] = $holiday;
-            }
-            elseif ($holiday->holiday_name === 'Eastern Easter' && !is_null($year))
-            {
+
+            } elseif ($holiday->holiday_name === 'Eastern Easter' && !is_null($year)) {
                 $index = $this->getEasternEasterSunday($year) + 1;
                 $holidaysAssoc[$index - 3] = $holiday;
             }
@@ -215,8 +211,7 @@ class Holidays
      */
     public function __get($property)
     {
-        if (property_exists($this, $property))
-        {
+        if (property_exists($this, $property)) {
             return $this->$property;
         }
 
@@ -232,8 +227,7 @@ class Holidays
      */
     public function __set($property, $value)
     {
-        if (property_exists($this, $property))
-        {
+        if (property_exists($this, $property)) {
             $this->$property = $value;
         }
 
