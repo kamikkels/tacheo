@@ -34,20 +34,17 @@ class Tacheo
 
         # If a timezone has been passed in move both DateTimes into that timezone, otherwise align end to start
         # Note: this will not change the underlying timestamp, consider adding a destructive timeshift parameter.
-        if($timezone)
-        {
+        if($timezone) {
             $tz = new \DateTimeZone($timezone);
 
-            if($this->start->getTimezone()->getName() !== $timezone)
-            {
+            if($this->start->getTimezone()->getName() !== $timezone) {
                 $this->start->setTimezone($tz);
             }
-            if($this->end->getTimezone()->getName() !== $timezone)
-            {
+
+            if($this->end->getTimezone()->getName() !== $timezone) {
                 $this->end->setTimezone($tz);
             }
-        } elseif($this->start->getTimezone()->getName() !== $this->end->getTimezone()->getName())
-        {
+        } elseif($this->start->getTimezone()->getName() !== $this->end->getTimezone()->getName()) {
             $this->end->setTimezone($this->start->getTimezone());
         }
 
@@ -75,12 +72,12 @@ class Tacheo
         # Make the $units arg lowercase and strip off any trailing s
         $unit = rtrim(strtolower($unit), 's');
         # Alias for completeWeeksBetween for consistency
-        if($unit === 'complete week'){
+        if($unit === 'complete week') {
             return $this->completeWeeksBetween('default', $retInt);
         }
 
         # Check the key is in the config, should allow easy expansion if anyone feels so inclined
-        if(!array_key_exists($unit, $this->timeLengths)){
+        if(!array_key_exists($unit, $this->timeLengths)) {
             $unitTypes = join('(s), ', array_keys($this->timeLengths)) . '(s), Complete week(s)';
             throw new \InvalidArgumentException("Invalid unit value [$unit] passed in," . PHP_EOL . "units must be in $unitTypes");
         }
@@ -88,9 +85,10 @@ class Tacheo
         $secondsDifference = $this->end->getTimestamp() - $this->start->getTimestamp();
         $interval = floor($secondsDifference / $this->timeLengths[$unit]);
 
-        if($retInt){
+        if($retInt) {
             return $interval;
         }
+
         return $this->humanise($interval, $unit);
     }
 
@@ -117,7 +115,7 @@ class Tacheo
 
         $totalWorkingDays = $startDays + $endDays + ($completeWeeks * 5) - count($holidays);
 
-        if($retInt){
+        if($retInt) {
             return $totalWorkingDays;
         }
         return $this->humanise($totalWorkingDays, 'Working Day');
@@ -134,9 +132,9 @@ class Tacheo
     public function completeWeeksBetween(String $startDay = 'default', bool $retInt = false)
     {
         # Set the default startDay if needed, throw some exceptions if needed
-        if(strtolower($startDay) === 'default'){
+        if(strtolower($startDay) === 'default') {
             $startDay = $this->weekStartDay;
-        } elseif (!is_int($startDay) || $startDay > $this->daysInWeek || $startDay < 1 ){
+        } elseif (!is_int($startDay) || $startDay > $this->daysInWeek || $startDay < 1 ) {
             throw new \InvalidArgumentException("Invalid startDay value passed in, startDay must be either default or 1 to $this->daysInWeek");
         }
         # Calculate the endDay
@@ -153,7 +151,7 @@ class Tacheo
         $weekCount = ($rawWeekDays - ($partWeekdaysAtStart + $partWeekdaysAtEnd)) / $this->daysInWeek;
 
         # Return the raw integer value if needed, or nice string if not
-        if($retInt){
+        if($retInt) {
             return $weekCount;
         }
         return self::humanise((int)$weekCount, 'week');
@@ -197,10 +195,8 @@ class Tacheo
         }
 
         $interval = 0;
-        for($i = $start; $i <= $end; $i++)
-        {
-            if(in_array($i, $this->workdays))
-            {
+        for($i = $start; $i <= $end; $i++) {
+            if(in_array($i, $this->workdays)) {
                 $interval++;
             }
         }
@@ -230,8 +226,7 @@ class Tacheo
      */
     public function __get($property)
     {
-        if(property_exists($this, $property))
-        {
+        if(property_exists($this, $property)) {
             return $this->$property;
         }
 
@@ -247,8 +242,7 @@ class Tacheo
      */
     public function __set($property, $value)
     {
-        if(property_exists($this, $property))
-        {
+        if(property_exists($this, $property)) {
             $this->$property = $value;
         }
 
