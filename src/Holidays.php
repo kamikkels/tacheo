@@ -51,11 +51,11 @@ class Holidays
         if($interval->y > 0 && !($interval->d == 0 && $interval->m == 0)) {
             $holidays = array_merge(
                 $this->getHolidaysBetweenMonthDay( # Get the holidays from the start date till the end of the first year
-                    (int)$start->format('md'), self::$endOfYear, (int)$start->format('Y'), $inc_partday),
+                    (int)$start->format('md'), self::END_OF_YEAR, (int)$start->format('Y'), $inc_partday),
                 $this->getHolidaysBetweenYears( # See if there are intermediate years and get holidays for each of them
                     (int)$start->format('Y'), (int)$end->format('Y'), $inc_partday),
                 $this->getHolidaysBetweenMonthDay( # Get the holidays from the start of the year till the end date (year specific + re-occurring)
-                    self::$startOfYear, (int)$end->format('md'), (int)$end->format('Y'), $inc_partday)
+                    self::START_OF_YEAR, (int)$end->format('md'), (int)$end->format('Y'), $inc_partday)
             );
 
             # Sort everything and return it
@@ -65,9 +65,9 @@ class Holidays
         } elseif ((int)$start->format('md') > (int)$end->format('md')) {
             $holidays = array_merge(
                 $this->getHolidaysBetweenMonthDay( # Get the holidays from the start date till the end of the first year
-                    (int)$start->format('md'), $this->endOfYear, (int)$start->format('Y'), $inc_partday),
+                    (int)$start->format('md'), self::END_OF_YEAR, (int)$start->format('Y'), $inc_partday),
                 $this->getHolidaysBetweenMonthDay( # Get the holidays form the start of the year till the end date
-                    $this->startOfYear, (int)$end->format('md'), (int)$end->format('Y'), $inc_partday)
+                    self::START_OF_YEAR, (int)$end->format('md'), (int)$end->format('Y'), $inc_partday)
             );
         } else {
             # Get the holidays from the start date till the end date (year specific + re-occurring)
@@ -156,18 +156,19 @@ class Holidays
     public function getWesternEasterSunday($year): int
     {
         $a = $year % 19;
-        $b = $year / 100;
+        $b = floor($year / 100);
         $c = $year % 100;
-        $d = $b / 4;
+        $d = floor($b / 4);
         $e = $b % 4;
-        $g = ((8 * $b) + 13) / 25;
-        $h = (19 * $a + $b - $d - $g + 15) % 30;
-        $i = $c / 4;
-        $k = $c % 4;
-        $l = (32 + 2 * $e + 2 * $i - $h - $k) % 7;
-        $m = ($a + 11 * $h + 22 * $l) / 451;
-        $month = (($h + $l - 7 * $m + 114) / 31);
-        $day = ($h + $l - (7 * $m) + (33 * $n) + 19) % 33;
+        $f = floor(($b + 8) / 25);
+        $g = floor(($b - $f + 1) / 3);
+        $h = ((19 * $a) + $b - $d - $g + 15) % 30;
+        $i = floor($c / 4);
+        $j = $c % 4;
+        $k = (32 + (2 * $e) + (2 * $i) - $h - $j) % 7;
+        $l = floor(($a + (11 * $h) + (22 * $k)) / 451);
+        $month = floor(($h + $k - (7 * $l) + 114) / 31);
+        $day = (($h + $k - (7 * $l) + 114) % 31) + 1;
 
         return mktime(0, 0, 0, $month, $day, $year);
     }

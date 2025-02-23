@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 class TacheoTest extends TestCase
 {
     /**
-     * @var array - testData: an array of data to run tests over
+     * @var array - testData: The main test data
      */
     private $testData = [
         [
@@ -87,7 +87,6 @@ class TacheoTest extends TestCase
      */
     public function testCorrectTimeBetween(): void
     {
-        # New line to make sure everything is nicely spaced
         foreach ($this->testData as $testDatum) {
             foreach ($testDatum['expected'] as $unit => $expectedResult) {
                 $start = date_create($testDatum['start']);
@@ -108,7 +107,6 @@ class TacheoTest extends TestCase
      */
     public function testCorrectWorkingDaysBetween(): void
     {
-        # New line to make sure everything is nicely spaced
         foreach ($this->testData as $testDatum) {
             $start = date_create($testDatum['start']);
             $end   = date_create($testDatum['end']);

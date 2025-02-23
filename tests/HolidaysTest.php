@@ -55,7 +55,7 @@ class HolidaysTest extends TestCase
         $this->holidays = new Holidays(['Test Locality']);
 
         // Calculate and assign the mktime() values here.
-        $this->testData['western_easter']['expected'] = mktime(0, 0, 0, 4, 20, 2030); // Expected date for Western Easter in 2030.
+        $this->testData['western_easter']['expected'] = mktime(0, 0, 0, 4, 21, 2030); // Expected date for Western Easter in 2030.
         $this->testData['eastern_easter']['expected'] = mktime(0, 0, 0, 4, 28, 2030); // Expected date for Eastern Easter in 2030.
     }
 
