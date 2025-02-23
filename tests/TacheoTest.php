@@ -105,9 +105,9 @@ class TacheoTest extends TestCase
     }
 
     /**
-     * Test execution of timeBetween with valid input.
+     * Test execution of workingDaysBetween with valid input.
      */
-    public function testCorrectworkingDaysBetween(): void
+    public function testCorrectWorkingDaysBetween(): void
     {
         # New line to make sure everything is nicely spaced
         foreach ($this->testData as $testDatum) {
@@ -143,6 +143,5 @@ class TacheoTest extends TestCase
 
         # Invalid returnInt
         $testTacheo->timeBetween('day', 'test');
-
     }
 }
