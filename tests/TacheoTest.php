@@ -8,7 +8,6 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Class TacheoTest
- * @package dt4a_challenge
  * @covers Tacheo
  */
 class TacheoTest extends TestCase
