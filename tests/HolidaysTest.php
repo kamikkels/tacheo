@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Tacheo;
 
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class HolidaysTest
- * @covers Holidays
  */
+#[CoversClass(Holidays::class)]
 class HolidaysTest extends TestCase
 {
     /**

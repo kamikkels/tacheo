@@ -4,12 +4,19 @@ declare(strict_types=1);
 
 namespace Tacheo;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TacheoTest
- * @covers Tacheo
+ *
+ * Run in separate processes: src/Tacheo.php does `include 'Holidays.php'` while
+ * Holidays is also classmap-autoloaded, so loading Tacheo after Holidays has been
+ * autoloaded (e.g. by HolidaysTest) fatals with "Cannot redeclare class".
  */
+#[CoversClass(Tacheo::class)]
+#[RunTestsInSeparateProcesses]
 class TacheoTest extends TestCase
 {
     /**
